@@ -10,7 +10,13 @@ const customers = [];
 app.get("/statement/:documentNumber", (request, response) => {
   const { documentNumber } = request.params;
 
-  const customer = customers.find((customer) => customer.documentNumber === documentNumber);
+  const customer = customers.find(
+    (customer) => customer.documentNumber === documentNumber
+  );
+
+  if (!customer) {
+    return response.status(400).json({ error: "Customer not found" });
+  }
 
   return response.json(customer.statement);
 });
