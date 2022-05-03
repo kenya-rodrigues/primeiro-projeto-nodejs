@@ -7,25 +7,33 @@ app.use(express.json());
 
 const customers = [];
 
-app.get("/statement/:documentNumber", (request, response) => {
-  const { documentNumber } = request.params;
+const verifyIfExistsAccountCPF = (request, response, next) => {
+  const { cpf } = request.headers;
 
   const customer = customers.find(
-    (customer) => customer.documentNumber === documentNumber
+    (customer) => customer.cpf === cpf
   );
 
   if (!customer) {
     return response.status(400).json({ error: "Customer not found" });
   }
 
+  request.customer = customer;
+
+  return next();
+}
+
+app.get("/statement", verifyIfExistsAccountCPF, (request, response) => {
+  const { customer } = request;
+
   return response.json(customer.statement);
 });
 
 app.post("/accounts", (request, response) => {
-  const { documentNumber, name } = request.body;
+  const { cpf, name } = request.body;
 
   const customerAlreadyExists = customers.some(
-    (customer) => customer.documentNumber === documentNumber
+    (customer) => customer.cpf === cpf
   );
 
   if (customerAlreadyExists) {
@@ -33,7 +41,7 @@ app.post("/accounts", (request, response) => {
   }
 
   customers.push({
-    documentNumber,
+    cpf,
     name,
     id: uuidv4(),
     statement: [],
